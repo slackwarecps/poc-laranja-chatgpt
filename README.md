@@ -2,6 +2,7 @@
 Uso de AI generativa com a api do whatsapp para uma poc de integração. #Software3.0
 
 # thread
+```
 {
   "messages": [
     {
@@ -130,18 +131,22 @@ Uso de AI generativa com a api do whatsapp para uma poc de integração. #Softwa
   "created": 1701682099,
   "status": "ativo"
 }
-
+```
 # cliente
+```
 {
   "telefone": "+5511983477360",
   "nome": "Iphone+De+Teste+Fabiao",
   "modo_assistente": true,
   "created": "1701676465.966721"
 }
+```
 
 # parametro
+```
 {
   "nome_gerente": "Alexandra Lucena",
   "modo_assistente": "ativo",
   "id": "1"
 }
+```
