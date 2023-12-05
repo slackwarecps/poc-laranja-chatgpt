@@ -3,15 +3,19 @@ import requests
 import uuid
 import logging
 import json
-
+import os
+from dotenv import load_dotenv
 
 debug=False
 # Coloque aqui a sua chave de API do OpenAI
-api_key = 'COLE_AQUI'
+load_dotenv()
+
+api_key = os.getenv("GPT_API_KEY")
+
 
 # Endpoint da GPT-4 API
 url_api = 'https://api.openai.com/v1'
-assistant_id = 'COLE_AQUI'
+assistant_id = os.getenv("ASSISTENTE_ID")
 
 # Cria um identificador único para a sessão da conversa
 session_id = str(uuid.uuid4())
@@ -90,5 +94,25 @@ def func_gpt_rodar_assistente(thread):
     return response.json()
   else:
     logging.error("   #9 Falha ao Assistente foi acionado no chat gpt")
+    logging.error(f"Status Code: {response.status_code}, Response: {response.text}")
+    return 'null'
+  
+  
+# RODA O ALGORITIMO DO CHATGPT  
+def func_gpt_status_do_run_do_assistente(thread_id):
+  logging.info(' #11 Entrou na func_gpt_status_do_run_do_assistente ') 
+  logging.info("assistant_id: "+ assistant_id)
+  logging.info("thread: "+ thread_id)
+  # Fazendo a requisição POST
+  url = url_api + '/threads/'+thread+'/runs/'+run_id
+  response = requests.get(url, headers=headers)
+
+  # Verifica se a requisição foi bem-sucedida
+  if response.status_code == 200:
+    logging.info("   #11 Assistente foi acionado no chat gpt")
+    logging.info(response.json())
+    return response.json()
+  else:
+    logging.error("   #11 Falha ao Assistente foi acionado no chat gpt")
     logging.error(f"Status Code: {response.status_code}, Response: {response.text}")
     return 'null'

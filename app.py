@@ -3,6 +3,9 @@ from flask import Flask, request
 import chatgpt
 import logging
 from controllers.twilio import func_twilio_chegou
+import os
+from dotenv import load_dotenv
+
 logging.basicConfig(filename='poc-laranja.log', encoding='utf-8', level=logging.INFO)
 logging.debug('aplicacao iniciada')
 logging.debug(' ')
@@ -22,8 +25,9 @@ app = Flask(__name__)
 
 @app.route('/', methods=['GET'])
 def home():
- 
+  load_dotenv()
   logging.info('This message should go to the log file')
+  print('AMBIENTE=' + os.getenv("AMBIENTE"))
   return 'POC Laranja v1.0', 200
 
 
