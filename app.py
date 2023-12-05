@@ -1,10 +1,12 @@
 from flask import Flask, request
 
 import chatgpt
+from chatgpt import func_gpt_status_do_run_do_assistente
 import logging
 from controllers.twilio import func_twilio_chegou
 import os
 from dotenv import load_dotenv
+import time
 
 logging.basicConfig(filename='poc-laranja.log', encoding='utf-8', level=logging.INFO)
 logging.debug('aplicacao iniciada')
@@ -73,10 +75,6 @@ def funcao2(id):
 def funcao3():
   chatgpt.funcao_03()
   return 'parametro do sistema modificado ', 201
-
-
-
-
 
 
 if __name__ == "__main__":

@@ -98,21 +98,22 @@ def func_gpt_rodar_assistente(thread):
     return 'null'
   
   
-# RODA O ALGORITIMO DO CHATGPT  
-def func_gpt_status_do_run_do_assistente(thread_id):
+# RODA O ALGORITIMO DO CHATGPT RUN 
+# 'expired','in_progress','completed'
+def func_gpt_status_do_run_do_assistente(thread_id,run_id):
   logging.info(' #11 Entrou na func_gpt_status_do_run_do_assistente ') 
   logging.info("assistant_id: "+ assistant_id)
   logging.info("thread: "+ thread_id)
   # Fazendo a requisição POST
-  url = url_api + '/threads/'+thread+'/runs/'+run_id
+  url = url_api + '/threads/'+thread_id+'/runs/'+run_id
   response = requests.get(url, headers=headers)
 
   # Verifica se a requisição foi bem-sucedida
   if response.status_code == 200:
-    logging.info("   #11 Assistente foi acionado no chat gpt")
-    logging.info(response.json())
+    logging.info("   #11 CHATGPT RUN")
+    #logging.info(response.json())
     return response.json()
   else:
-    logging.error("   #11 Falha ao Assistente foi acionado no chat gpt")
+    logging.error("   #11 Falha ao CHATGPT RUN")
     logging.error(f"Status Code: {response.status_code}, Response: {response.text}")
     return 'null'

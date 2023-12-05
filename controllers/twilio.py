@@ -7,9 +7,13 @@ from botocore.exceptions import ClientError
 from pprint import pprint
 from datetime import datetime
 import pytz 
+import time
 from chatgpt import func_gpt_criar_thread
 from chatgpt import func_gpt_criar_mensagem
 from chatgpt import func_gpt_rodar_assistente
+from chatgpt import func_gpt_status_do_run_do_assistente
+import os
+from dotenv import load_dotenv
 
 
 
@@ -68,18 +72,39 @@ def func_twilio_chegou(request):
   thread=existe_thread
   retorno_msg=insere_mensagem_na_thread(telefone,thread,mensagem)
   
-  #Roda o Assistente
-  roda_assistente(thread)
+  # 9 Roda o Assistente
+  run_id = roda_assistente(thread)
+  print('run_id='+run_id)
+  print('thread='+thread)
+  # 14 Aguarda 
+  aguarda_execucao_do_assistente(thread,run_id)
 
 
 
 
 def roda_assistente(thread): 
   logging.info(' #9 rodando o Assistente...')
-  func_gpt_rodar_assistente(thread)
+  run_id=func_gpt_rodar_assistente(thread)
+  return run_id['id']
   
   
-
+def aguarda_execucao_do_assistente(thread,run_id):
+  load_dotenv()
+  logging.info(' #9 func_gpt_status_do_run_do_assistente')
+  retorno = func_gpt_status_do_run_do_assistente(thread,run_id)
+  logging.info(' status do run='+retorno['status'])
+  
+  contador_aguarde=0
+  while contador_aguarde <= 60:
+    logging.info('espera um pouco...'+ str(contador_aguarde))
+    time.sleep(1)
+    retorno = func_gpt_status_do_run_do_assistente(thread,run_id)
+    logging.info(' status do run='+retorno['status'])
+    if (contador_aguarde ==30 ) or (retorno['status']=='completed'):
+      break  
+    contador_aguarde=contador_aguarde+1
+    
+  return retorno, 200
 
 
 
