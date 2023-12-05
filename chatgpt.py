@@ -117,3 +117,23 @@ def func_gpt_status_do_run_do_assistente(thread_id,run_id):
     logging.error("   #11 Falha ao CHATGPT RUN")
     logging.error(f"Status Code: {response.status_code}, Response: {response.text}")
     return 'null'
+
+
+
+# Busca Mensagens da Thread 
+def func_gpt_busca_mensagens(thread_id):
+  logging.info(' #15 Entrou na func_gpt_busca_mensagens ') 
+  logging.info("thread: "+ thread_id)
+  # Fazendo a requisição POST
+  url = url_api + '/threads/'+thread_id+'/messages'
+  response = requests.get(url, headers=headers)
+
+  # Verifica se a requisição foi bem-sucedida
+  if response.status_code == 200:
+    logging.info("   #15 busca_mensagens ")
+    logging.info(response.json())
+    return response.json()
+  else:
+    logging.error("   #15 Falha ao busca_mensagens")
+    logging.error(f"Status Code: {response.status_code}, Response: {response.text}")
+    return 'null'

@@ -150,3 +150,18 @@ Uso de AI generativa com a api do whatsapp para uma poc de integração. #Softwa
   "id": "1"
 }
 ```
+## 1 Como gerar o build
+````
+$ docker build -t fabioalvaro/poc-laranja:latest .
+```````
+# 2 como rodar a app
+
+Crie um arquivo .env com as seguinte variaveis de ambiente
+
+````
+AMBIENTE=DEV
+GPT_API_KEY=COLE_AQUI
+ASSISTENTE_ID=COLE_AQUI
+
+````
+

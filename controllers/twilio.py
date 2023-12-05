@@ -12,6 +12,7 @@ from chatgpt import func_gpt_criar_thread
 from chatgpt import func_gpt_criar_mensagem
 from chatgpt import func_gpt_rodar_assistente
 from chatgpt import func_gpt_status_do_run_do_assistente
+from chatgpt import func_gpt_busca_mensagens
 import os
 from dotenv import load_dotenv
 
@@ -76,33 +77,52 @@ def func_twilio_chegou(request):
   run_id = roda_assistente(thread)
   print('run_id='+run_id)
   print('thread='+thread)
-  # 14 Aguarda 
+  # 14 Aguarda JUMP para Fase Assincrona
   aguarda_execucao_do_assistente(thread,run_id)
 
 
 
-
-def roda_assistente(thread): 
-  logging.info(' #9 rodando o Assistente...')
-  run_id=func_gpt_rodar_assistente(thread)
-  return run_id['id']
   
-  
+# ****************************
+# FASE ASSINCRONA
+# ****************************
 def aguarda_execucao_do_assistente(thread,run_id):
   load_dotenv()
-  logging.info(' #9 func_gpt_status_do_run_do_assistente')
+  logging.info(' #14 func_gpt_status_do_run_do_assistente')
   retorno = func_gpt_status_do_run_do_assistente(thread,run_id)
   logging.info(' status do run='+retorno['status'])
   
   contador_aguarde=0
+  timeout_flag=False
   while contador_aguarde <= 60:
     logging.info('espera um pouco...'+ str(contador_aguarde))
     time.sleep(1)
     retorno = func_gpt_status_do_run_do_assistente(thread,run_id)
-    logging.info(' status do run='+retorno['status'])
+    logging.info(' STATUS_THREAD='+retorno['status'])
     if (contador_aguarde ==30 ) or (retorno['status']=='completed'):
+      ultimo_status=retorno['status']      
+      if ultimo_status!='completed':
+        logging.warning(' Saiu por time-out 30 segundos')
+        timeout_flag=True
+      
       break  
     contador_aguarde=contador_aguarde+1
+  # 15 Se deu certo aguardar entao pega as mensagens do assistente e envia de volta.  
+  if (timeout_flag==False):
+    logging.info(' #15 deu certo... busca e filtra')
+    # 15 busca as mensagens
+    lista_de_mensagens_full =func_gpt_busca_mensagens(thread)
+    # 16 filtra as mensagens
+    logging.info(' #16 Vou filtrar as mensagens')
+    lista_de_mensagens_assistente=filtra_as_mensagens_do_assistente(lista_de_mensagens_full)
+    print(lista_de_mensagens_assistente)
+    # 12 ENVIAR PARA O CLIENTE
+    logging.info('<<TO-DO ENVIAR PARA O WHATS AQUI>>>')
+  
+  logging.info(' :) FIM DO PROCESSO!!!')
+  logging.info('            ')
+  logging.info('            ')
+  logging.info(' ========================================== ')  
     
   return retorno, 200
 
@@ -278,3 +298,22 @@ def dynamo_mensagem_salvar(telefone,thread,mensagem, dynamodb=None):
 
   return response  
 
+# Filtra as mensagens do assistente
+def filtra_as_mensagens_do_assistente(lista_de_mensagens=[]):
+  logging.info('    # =====>    Filtrando mensagens')
+  #retorno_mock={'id': 'msg_0oFd3nEesdafiM5fUlVeImtP', 'object': 'thread.message', 'created_at': 1701772193, 'thread_id': 'thread_HwSlIPzXmUSqXBD7WAiWwBrT', 'role': 'assistant', 'content': [{'type': 'text', 'text': {'value': 'Claro! Aqui vai uma para você:\n\nPor que o esqueleto não brigou com ninguém?\n\nPorque ele não tem estômago para isso! \n\nEspero que tenha arrancado pelo menos um sorrisinho! Precisa de mais alguma coisa?', 'annotations': []}}], 'file_ids': [], 'assistant_id': 'asst_er3OQRioQgyP0O3rE1sarDz9', 'run_id': 'run_gBKDyMYdpzJ1cud48k9JFcVr', 'metadata': {}}
+  
+  #lista_de_mensagens += retorno_mock
+  
+  retorno=lista_de_mensagens
+  return retorno
+
+
+
+
+
+
+def roda_assistente(thread): 
+  logging.info(' #9 rodando o Assistente...')
+  run_id=func_gpt_rodar_assistente(thread)
+  return run_id['id']

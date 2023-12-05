@@ -2,6 +2,7 @@ from flask import Flask, request
 
 import chatgpt
 from chatgpt import func_gpt_status_do_run_do_assistente
+from chatgpt import func_gpt_busca_mensagens
 import logging
 from controllers.twilio import func_twilio_chegou
 import os
@@ -13,23 +14,25 @@ logging.debug('aplicacao iniciada')
 logging.debug(' ')
 logging.debug('****************************************')
 
-
 api='/poc-laranja/v1/'
-
-
-
 
 # Flask app
 app = Flask(__name__)
-
-
-
 
 @app.route('/', methods=['GET'])
 def home():
   load_dotenv()
   logging.info('This message should go to the log file')
   print('AMBIENTE=' + os.getenv("AMBIENTE"))
+  return 'POC Laranja v1.0', 200
+
+@app.route('/teste', methods=['GET'])
+def teste():
+  load_dotenv()
+  logging.info('TESTE')
+  print('T_THREAD=' + os.getenv("T_THREAD"))
+  print('AMBIENTE=' + os.getenv("AMBIENTE"))
+  func_gpt_busca_mensagens(os.getenv("T_THREAD"))
   return 'POC Laranja v1.0', 200
 
 
