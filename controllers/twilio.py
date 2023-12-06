@@ -14,10 +14,10 @@ from chatgpt import func_gpt_rodar_assistente
 from chatgpt import func_gpt_status_do_run_do_assistente
 from chatgpt import func_gpt_busca_mensagens
 import os
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 
 
-
+load_dotenv(find_dotenv())
 
 def func_twilio_chegou(request):
   logging.info("name: "+ __name__)

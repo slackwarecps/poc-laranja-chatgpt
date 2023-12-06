@@ -4,11 +4,10 @@ import uuid
 import logging
 import json
 import os
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 
 debug=False
-# Coloque aqui a sua chave de API do OpenAI
-load_dotenv()
+load_dotenv(find_dotenv())
 
 api_key = os.getenv("GPT_API_KEY")
 

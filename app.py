@@ -6,10 +6,14 @@ from chatgpt import func_gpt_busca_mensagens
 import logging
 from controllers.twilio import func_twilio_chegou
 import os
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 import time
 
-logging.basicConfig(filename='poc-laranja.log', encoding='utf-8', level=logging.INFO)
+load_dotenv(find_dotenv())
+
+
+
+logging.basicConfig(filename='log/poc-laranja.log', encoding='utf-8', level=logging.INFO)
 logging.debug('aplicacao iniciada')
 logging.debug(' ')
 logging.debug('****************************************')
@@ -21,14 +25,14 @@ app = Flask(__name__)
 
 @app.route('/', methods=['GET'])
 def home():
-  load_dotenv()
-  logging.info('This message should go to the log file')
-  print('AMBIENTE=' + os.getenv("AMBIENTE"))
+ 
+  logging.info('chegou na home page!')
+  logging.info('AMBIENTE=' + os.getenv("AMBIENTE"))
   return 'POC Laranja v1.0', 200
 
 @app.route('/teste', methods=['GET'])
 def teste():
-  load_dotenv()
+
   logging.info('TESTE')
   print('T_THREAD=' + os.getenv("T_THREAD"))
   print('AMBIENTE=' + os.getenv("AMBIENTE"))
