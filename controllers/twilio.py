@@ -173,8 +173,11 @@ def insere_mensagem_na_thread(telefone,thread,mensagem):
 
 def dynamo_cliente_busca_por_telefone(telefone, dynamodb=None):
   logging.info('Buscando telefone '+ telefone)
-  if not dynamodb:
+  if os.getenv("BANCO")=='LOCAL':
     dynamodb = boto3.resource('dynamodb', endpoint_url="http://localhost:8000")
+  else:
+    dynamodb = boto3.resource('dynamodb')
+    
   table = dynamodb.Table('cliente')
   try:
     response = table.get_item(Key={'telefone': telefone})
@@ -192,8 +195,10 @@ def dynamo_cliente_busca_por_telefone(telefone, dynamodb=None):
   
 def dynamo_thread_busca_por_telefone(telefone, dynamodb=None):
   logging.info(' #2 Buscando thread ativa para o telefone '+ telefone)
-  if not dynamodb:
+  if os.getenv("BANCO")=='LOCAL':
     dynamodb = boto3.resource('dynamodb', endpoint_url="http://localhost:8000")
+  else:
+    dynamodb = boto3.resource('dynamodb')
   table = dynamodb.Table('thread')
   # Substitua pelo valor da chave de partição 'telefone' que você está buscando
   telefone_busca = telefone
@@ -233,8 +238,10 @@ def dynamo_thread_busca_por_telefone(telefone, dynamodb=None):
   
 def dynamo_cliente_salvar(telefone,ProfileName, dynamodb=None):
   logging.info(' #7. Insere Cliente na Base:' +telefone)
-  if not dynamodb:
-    dynamodb = boto3.resource('dynamodb', endpoint_url="http://localhost:8000")    
+  if os.getenv("BANCO")=='LOCAL':
+    dynamodb = boto3.resource('dynamodb', endpoint_url="http://localhost:8000")
+  else:
+    dynamodb = boto3.resource('dynamodb')  
   # Para o fuso horário de Brasília use 'America/Sao_Paulo'
   timezone = pytz.timezone('America/Sao_Paulo')
   # Pega a data e hora atual no fuso horário de Brasília
@@ -253,8 +260,10 @@ def dynamo_cliente_salvar(telefone,ProfileName, dynamodb=None):
 
 def dynamo_thread_salvar(telefone,thread_criada, dynamodb=None):
   logging.info(' #4 50. Insere Cliente na Base:' +telefone)
-  if not dynamodb:
-    dynamodb = boto3.resource('dynamodb', endpoint_url="http://localhost:8000")    
+  if os.getenv("BANCO")=='LOCAL':
+    dynamodb = boto3.resource('dynamodb', endpoint_url="http://localhost:8000")
+  else:
+    dynamodb = boto3.resource('dynamodb')    
 
   table = dynamodb.Table('thread')
   lista=[]
@@ -272,8 +281,10 @@ def dynamo_thread_salvar(telefone,thread_criada, dynamodb=None):
 
 def dynamo_mensagem_salvar(telefone,thread,mensagem, dynamodb=None):
   logging.info('   #5 51. Insere Mensagem na Base:' +telefone)
-  if not dynamodb:
-    dynamodb = boto3.resource('dynamodb', endpoint_url="http://localhost:8000")    
+  if os.getenv("BANCO")=='LOCAL':
+    dynamodb = boto3.resource('dynamodb', endpoint_url="http://localhost:8000")
+  else:
+    dynamodb = boto3.resource('dynamodb')    
   
   new_messages = [
     thread
