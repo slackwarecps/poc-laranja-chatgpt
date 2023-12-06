@@ -3,11 +3,14 @@ from flask import Flask, request
 import chatgpt
 from chatgpt import func_gpt_status_do_run_do_assistente
 from chatgpt import func_gpt_busca_mensagens
+from controllers.twiliox import func_responde_ao_cliente_pelo_whatsapp
 import logging
-from controllers.twilio import func_twilio_chegou
+from controllers.twiliox import func_twilio_chegou
 import os
 from dotenv import load_dotenv, find_dotenv
 import time
+
+
 
 load_dotenv(find_dotenv())
 
@@ -82,6 +85,44 @@ def funcao2(id):
 def funcao3():
   chatgpt.funcao_03()
   return 'parametro do sistema modificado ', 201
+
+
+# Whatsapp Service twilio Callbacks
+@app.route(api+'service/request', methods=['POST'])
+def service_request():
+  logging.info('POST >> no service_request')
+  return '', 201
+
+@app.route(api+'service/fallback', methods=['POST'])
+def service_fallback():
+  logging.info('POST >> no service_fallback')
+  return '', 201
+
+@app.route(api+'service/health', methods=['GET'])
+def service_health():
+  logging.info('GET >> no service_health')
+  message_sid = request.values.get('MessageSid', None)
+  message_status = request.values.get('MessageStatus', None)
+  logging.info('SID: {}, Status: {}'.format(message_sid, message_status))
+
+  return ('', 204)
+
+####
+###TESTES
+####
+
+@app.route(api+'teste/envia-zap', methods=['POST'])
+def teste_envia_zap():
+  logging.info('POST >> no teste_envia_zap')
+  logging.info('<<TO-DO ENVIAR PARA O WHATS AQUI>>>')
+  remetentex1='whatsapp:14155238886'
+  remetente='whatsapp:18647407407'#jennifer numero
+  mensagem='Com grandes poderes vem grandes responsabilidades, pequeno gafanhoto... #ale'
+  destino='whatsapp:5511996295009'
+  func_responde_ao_cliente_pelo_whatsapp(remetente, mensagem,destino)
+
+  return ('', 201)
+
 
 
 if __name__ == "__main__":

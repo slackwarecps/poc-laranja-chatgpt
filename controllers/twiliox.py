@@ -15,6 +15,8 @@ from chatgpt import func_gpt_status_do_run_do_assistente
 from chatgpt import func_gpt_busca_mensagens
 import os
 from dotenv import load_dotenv, find_dotenv
+import requests
+import json
 
 
 load_dotenv(find_dotenv())
@@ -78,7 +80,7 @@ def func_twilio_chegou(request):
   print('run_id='+run_id)
   print('thread='+thread)
   # 14 Aguarda JUMP para Fase Assincrona
-  aguarda_execucao_do_assistente(thread,run_id)
+  aguarda_execucao_do_assistente(thread,run_id,telefone)
 
 
 
@@ -86,7 +88,7 @@ def func_twilio_chegou(request):
 # ****************************
 # FASE ASSINCRONA
 # ****************************
-def aguarda_execucao_do_assistente(thread,run_id):
+def aguarda_execucao_do_assistente(thread,run_id,telefone_do_cliente):
   load_dotenv()
   logging.info(' #14 func_gpt_status_do_run_do_assistente')
   retorno = func_gpt_status_do_run_do_assistente(thread,run_id)
@@ -115,9 +117,14 @@ def aguarda_execucao_do_assistente(thread,run_id):
     # 16 filtra as mensagens
     logging.info(' #16 Vou filtrar as mensagens')
     lista_de_mensagens_assistente=filtra_as_mensagens_do_assistente(lista_de_mensagens_full)
-    print(lista_de_mensagens_assistente)
+    #print(lista_de_mensagens_assistente['data'])
+    lista_em_texto = json.dumps(lista_de_mensagens_assistente)
+    
     # 12 ENVIAR PARA O CLIENTE
     logging.info('<<TO-DO ENVIAR PARA O WHATS AQUI>>>')
+    remetente='whatsapp:18647407407' # tem que ser o numero da Jennifer Assistente 
+    mensagem='Com grandes poderes vem grandes responsabilidades, pequeno gafanhoto...'
+    func_responde_ao_cliente_pelo_whatsapp(remetente, mensagem,telefone_do_cliente)
   
   logging.info(' :) FIM DO PROCESSO!!!')
   logging.info('            ')
@@ -328,3 +335,25 @@ def roda_assistente(thread):
   logging.info(' #9 rodando o Assistente...')
   run_id=func_gpt_rodar_assistente(thread)
   return run_id['id']
+
+# remetente='whatsapp:+14155238886'
+# mensagem='Com grandes poderes vem grandes responsabilidades, pequeno gafanhoto...'
+# destino='whatsapp:+5511983477360'
+def func_responde_ao_cliente_pelo_whatsapp(remetente, mensagem,destino):
+  account_twilio='ACf1f1f76649baf6a659e6cd176cf7fbcb'
+  url = "https://api.twilio.com/2010-04-01/Accounts/"+account_twilio+"/Messages.json"
+  TWILIO_BASIC_RESPOSTA='QUNmMWYxZjc2NjQ5YmFmNmE2NTllNmNkMTc2Y2Y3ZmJjYjo2YzllZTA3Y2QwM2EzMzI3ZGQ1MGUwYTIyMWU5OTE0ZA=='
+
+  payload = 'To='+destino+'&From='+remetente+'&Body='+mensagem+'&StatusCallback=http%3A%2F%2Fec2-54-86-60-242.compute-1.amazonaws.com%3A8080%2Fpoc-laranja%2Fv1%2Fservice%2Fhealth'
+  headers = {
+  'Content-Type': 'application/x-www-form-urlencoded',
+  'Authorization': 'Basic '+TWILIO_BASIC_RESPOSTA
+  }
+
+  
+  response = requests.request("POST", url, headers=headers, data=payload)
+
+  print(response.text)
+  logging.info('Enviou >>> ZAP ZAP :) ')
+  #logging.info(message.sid)
+  
