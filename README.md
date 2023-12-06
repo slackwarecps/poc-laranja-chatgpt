@@ -165,3 +165,6 @@ ASSISTENTE_ID=COLE_AQUI
 
 ````
 
+## gerando o docker
+$ docker pull fabioalvaro/poc-laranja:latest
+$ docker run --name poc-laranja -v $PWD:/work -p 8080:8080 fabioalvaro/poc-laranja:latest 
