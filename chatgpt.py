@@ -79,8 +79,7 @@ def func_gpt_rodar_assistente(thread):
   logging.info("thread: "+ thread)
   payload = {
          
-                "assistant_id": assistant_id,
-    "instructions": "Fala meu querido, do voce precisa campeao?"
+                "assistant_id": assistant_id
     }
   # Fazendo a requisição POST
   url = url_api + '/threads/'+thread+'/runs'
