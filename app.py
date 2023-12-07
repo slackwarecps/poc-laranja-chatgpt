@@ -31,7 +31,7 @@ def home():
  
   logging.info('chegou na home page!')
   logging.info('AMBIENTE=' + os.getenv("AMBIENTE"))
-  return 'POC Laranja v1.0', 200
+  return '<h1> POC Laranja v1.0</h1>'+'<br>Ambiente='+ os.getenv("AMBIENTE"), 200
 
 @app.route('/teste', methods=['GET'])
 def teste():
