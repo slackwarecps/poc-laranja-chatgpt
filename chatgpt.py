@@ -129,8 +129,8 @@ def func_gpt_busca_mensagens(thread_id):
 
   # Verifica se a requisição foi bem-sucedida
   if response.status_code == 200:
-    logging.info("   #15 busca_mensagens ")
-    logging.info(response.json())
+    logging.info("   #15 busca_mensagens realizada com sucesso ")
+    #logging.info(response.json())
     return response.json()
   else:
     logging.error("   #15 Falha ao busca_mensagens")

@@ -12,7 +12,7 @@ import time
 
 
 
-load_dotenv(find_dotenv())
+load_dotenv('config/.env')
 
 
 
@@ -108,19 +108,16 @@ def service_health():
   return ('', 204)
 
 ####
-###TESTES
+### TESTES, sim depois pode apagar isso aqui :) #to-do
 ####
-
 @app.route(api+'teste/envia-zap', methods=['POST'])
 def teste_envia_zap():
   logging.info('POST >> no teste_envia_zap')
-  logging.info('<<TO-DO ENVIAR PARA O WHATS AQUI>>>')
-  remetentex1='whatsapp:14155238886'
-  remetente='whatsapp:18647407407'#jennifer numero
+  logging.info('<<TO-DO ENVIAR PARA O WHATS AQUI>>>')  
+  remetente='whatsapp:'+os.getenv("REMETENTE_TWILIO_WHATS") #jennifer numero
   mensagem='Com grandes poderes vem grandes responsabilidades, pequeno gafanhoto... #ale'
-  destino='whatsapp:5511996295009'
+  destino='whatsapp:5511983477360' #Teste do Fabio
   func_responde_ao_cliente_pelo_whatsapp(remetente, mensagem,destino)
-
   return ('', 201)
 
 

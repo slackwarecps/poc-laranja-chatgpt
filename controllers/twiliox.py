@@ -19,9 +19,10 @@ import requests
 import json
 
 
-load_dotenv(find_dotenv())
+load_dotenv('config/.env')
 
 def func_twilio_chegou(request):
+  logging.info('================================ ')
   logging.info("name: "+ __name__)
   logging.info('Entrou na func_twilio_chegou')
   wa_id = request.form.get('WaId')
@@ -30,7 +31,12 @@ def func_twilio_chegou(request):
   logging.info('tel_origem='+wa_id)
   
   ## FASE 1 =================
-  
+  logging.info('TELEFONE= '+wa_id)
+  logging.info('PERGUNTA= '+mensagem)
+  logging.info('================================ ')
+  logging.info(' ')
+  logging.info(' ')
+  logging.info(' ')
   ## CLIENTE JA ESTA CADASTRADO
   if verifica_cliente_esta_na_tabela(wa_id)==True:
     
@@ -96,15 +102,15 @@ def aguarda_execucao_do_assistente(thread,run_id,telefone_do_cliente):
   
   contador_aguarde=0
   timeout_flag=False
-  while contador_aguarde <= 60:
+  while contador_aguarde <= 120:
     logging.info('espera um pouco...'+ str(contador_aguarde))
     time.sleep(1)
     retorno = func_gpt_status_do_run_do_assistente(thread,run_id)
     logging.info(' STATUS_THREAD='+retorno['status'])
-    if (contador_aguarde ==30 ) or (retorno['status']=='completed'):
+    if (contador_aguarde ==60 ) or (retorno['status']=='completed'):
       ultimo_status=retorno['status']      
       if ultimo_status!='completed':
-        logging.warning(' Saiu por time-out 30 segundos')
+        logging.warning(' Saiu por time-out 60 segundos')
         timeout_flag=True
       
       break  
@@ -112,6 +118,8 @@ def aguarda_execucao_do_assistente(thread,run_id,telefone_do_cliente):
   # 15 Se deu certo aguardar entao pega as mensagens do assistente e envia de volta.  
   if (timeout_flag==False):
     logging.info(' #15 deu certo... busca e filtra')
+    logging.info(' #15 Vou aguarda 5 segundos para o chat-gpt conseguir responder todas as respostas.')
+    time.sleep(5)
     # 15 busca as mensagens
     lista_de_mensagens_full =func_gpt_busca_mensagens(thread)
     # 16 filtra as mensagens
@@ -124,21 +132,21 @@ def aguarda_execucao_do_assistente(thread,run_id,telefone_do_cliente):
     logging.info('<<TO-DO ENVIAR PARA O WHATS AQUI>>>')
     payload_json =lista_de_mensagens_full
     #print(payload_json)
-    print('***********')
+  
     if 'data' in payload_json:
-      data2 = payload_json['data']
-      #print(data2)
+      data2 = payload_json['data']      
       for item in data2:
-        if item['role'] == 'assistant':
-          print(item['content'][0]['text']['value'])
-          linha =item['content'][0]['text']['value']
-          print('=================')
+        if item['role'] == 'assistant':          
+          linha =item['content'][0]['text']['value']          
           # 12 ENVIAR PARA O CLIENTE
           destino='whatsapp:'+telefone_do_cliente
           remetente='whatsapp:18647407407' # tem que ser o numero da Jennifer Assistente 
           mensagem=linha
+          time.sleep(2)
           func_responde_ao_cliente_pelo_whatsapp(remetente, mensagem,destino)
   
+  logging.info(' www Apagando a thread desse cliente por enquanto')
+  thread_apagar(telefone_do_cliente)
   logging.info(' :) FIM DO PROCESSO!!!')
   # limpar a thread
   
@@ -334,10 +342,6 @@ def dynamo_mensagem_salvar(telefone,thread,mensagem, dynamodb=None):
 # Filtra as mensagens do assistente
 def filtra_as_mensagens_do_assistente(lista_de_mensagens=[]):
   logging.info('    # =====>    Filtrando mensagens')
-  #retorno_mock={'id': 'msg_0oFd3nEesdafiM5fUlVeImtP', 'object': 'thread.message', 'created_at': 1701772193, 'thread_id': 'thread_HwSlIPzXmUSqXBD7WAiWwBrT', 'role': 'assistant', 'content': [{'type': 'text', 'text': {'value': 'Claro! Aqui vai uma para você:\n\nPor que o esqueleto não brigou com ninguém?\n\nPorque ele não tem estômago para isso! \n\nEspero que tenha arrancado pelo menos um sorrisinho! Precisa de mais alguma coisa?', 'annotations': []}}], 'file_ids': [], 'assistant_id': 'asst_er3OQRioQgyP0O3rE1sarDz9', 'run_id': 'run_gBKDyMYdpzJ1cud48k9JFcVr', 'metadata': {}}
-  
-  #lista_de_mensagens += retorno_mock
-  
   retorno=lista_de_mensagens
   return retorno
 
@@ -351,24 +355,40 @@ def roda_assistente(thread):
   run_id=func_gpt_rodar_assistente(thread)
   return run_id['id']
 
-# remetente='whatsapp:+14155238886'
-# mensagem='Com grandes poderes vem grandes responsabilidades, pequeno gafanhoto...'
-# destino='whatsapp:+5511983477360'
-def func_responde_ao_cliente_pelo_whatsapp(remetente, mensagem,destino):
-  account_twilio='ACf1f1f76649baf6a659e6cd176cf7fbcb'
-  url = "https://api.twilio.com/2010-04-01/Accounts/"+account_twilio+"/Messages.json"
-  TWILIO_BASIC_RESPOSTA='QUNmMWYxZjc2NjQ5YmFmNmE2NTllNmNkMTc2Y2Y3ZmJjYjo2YzllZTA3Y2QwM2EzMzI3ZGQ1MGUwYTIyMWU5OTE0ZA=='
 
-  payload = 'To='+destino+'&From='+remetente+'&Body='+mensagem+'&StatusCallback=http%3A%2F%2Fec2-54-86-60-242.compute-1.amazonaws.com%3A8080%2Fpoc-laranja%2Fv1%2Fservice%2Fhealth'
+# TWILIO :: ENVIO DE VOLTA PARA O CLIENTE
+def func_responde_ao_cliente_pelo_whatsapp(remetente, mensagem,destino):  
+  STATUS_CALLBACK = os.getenv("STATUS_CALLBACK")
+  TWILIO_BASIC_RESPOSTA = os.environ['TWILIO_BASIC_RESPOSTA']
+  TWILIO_ACCOUNT_SID= os.environ['TWILIO_ACCOUNT_SID']
+  STATUS_CALLBACK=os.getenv("STATUS_CALLBACK")
+  url = "https://api.twilio.com/2010-04-01/Accounts/"+TWILIO_ACCOUNT_SID+"/Messages.json"
+  payload = 'To='+destino+'&From='+remetente+'&Body='+mensagem+'&StatusCallback='+str(STATUS_CALLBACK)
   headers = {
   'Content-Type': 'application/x-www-form-urlencoded',
   'Authorization': 'Basic '+TWILIO_BASIC_RESPOSTA
-  }
-
-  
+  }  
   response = requests.request("POST", url, headers=headers, data=payload)
-
-  print(response.text)
-  logging.info('Enviou >>> ZAP ZAP :) ')
-  #logging.info(message.sid)
+  logging.info('    Resposta da twilio: ')
+  logging.info('    >> : '+response.text)
+  logging.info('    Enviou whatsapp pela twilio ')
+  logging.info(     ' ')
   
+  
+#Apaga a thread  
+def thread_apagar(telefone, dynamodb=None):
+  logging.info(' #7. Insere Cliente na Base:' +telefone)
+  if os.getenv("BANCO")=='LOCAL':
+    dynamodb = boto3.resource('dynamodb', endpoint_url="http://localhost:8000")
+  else:
+    dynamodb = boto3.resource('dynamodb')  
+  table = dynamodb.Table('thread')
+  # Agora podemos deletar o antigo item
+  response_deletar = table.delete_item(
+      Key={
+          'telefone': telefone,
+          'status': 'ativo'
+      }
+  )
+  logging.info('thread apagada:', response_deletar)
+  return response_deletar
