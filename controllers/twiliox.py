@@ -115,18 +115,33 @@ def aguarda_execucao_do_assistente(thread,run_id,telefone_do_cliente):
     # 15 busca as mensagens
     lista_de_mensagens_full =func_gpt_busca_mensagens(thread)
     # 16 filtra as mensagens
-    logging.info(' #16 Vou filtrar as mensagens')
-    lista_de_mensagens_assistente=filtra_as_mensagens_do_assistente(lista_de_mensagens_full)
+    #logging.info(' #16 Vou filtrar as mensagens')
+    #lista_de_mensagens_assistente=filtra_as_mensagens_do_assistente(lista_de_mensagens_full)
     #print(lista_de_mensagens_assistente['data'])
-    lista_em_texto = json.dumps(lista_de_mensagens_assistente)
+    
     
     # 12 ENVIAR PARA O CLIENTE
     logging.info('<<TO-DO ENVIAR PARA O WHATS AQUI>>>')
-    remetente='whatsapp:18647407407' # tem que ser o numero da Jennifer Assistente 
-    mensagem='Com grandes poderes vem grandes responsabilidades, pequeno gafanhoto...'
-    func_responde_ao_cliente_pelo_whatsapp(remetente, mensagem,telefone_do_cliente)
+    payload_json =lista_de_mensagens_full
+    #print(payload_json)
+    print('***********')
+    if 'data' in payload_json:
+      data2 = payload_json['data']
+      #print(data2)
+      for item in data2:
+        if item['role'] == 'assistant':
+          print(item['content'][0]['text']['value'])
+          linha =item['content'][0]['text']['value']
+          print('=================')
+          # 12 ENVIAR PARA O CLIENTE
+          destino='whatsapp:'+telefone_do_cliente
+          remetente='whatsapp:18647407407' # tem que ser o numero da Jennifer Assistente 
+          mensagem=linha
+          func_responde_ao_cliente_pelo_whatsapp(remetente, mensagem,destino)
   
   logging.info(' :) FIM DO PROCESSO!!!')
+  # limpar a thread
+  
   logging.info('            ')
   logging.info('            ')
   logging.info(' ========================================== ')  
