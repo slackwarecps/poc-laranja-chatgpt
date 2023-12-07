@@ -359,8 +359,8 @@ def roda_assistente(thread):
 # TWILIO :: ENVIO DE VOLTA PARA O CLIENTE
 def func_responde_ao_cliente_pelo_whatsapp(remetente, mensagem,destino):  
   STATUS_CALLBACK = os.getenv("STATUS_CALLBACK")
-  TWILIO_BASIC_RESPOSTA = os.environ['TWILIO_BASIC_RESPOSTA']
-  TWILIO_ACCOUNT_SID= os.environ['TWILIO_ACCOUNT_SID']
+  TWILIO_BASIC_RESPOSTA = os.getenv("TWILIO_BASIC_RESPOSTA")
+  TWILIO_ACCOUNT_SID= os.getenv("TWILIO_ACCOUNT_SID")
   STATUS_CALLBACK=os.getenv("STATUS_CALLBACK")
   url = "https://api.twilio.com/2010-04-01/Accounts/"+TWILIO_ACCOUNT_SID+"/Messages.json"
   payload = 'To='+destino+'&From='+remetente+'&Body='+mensagem+'&StatusCallback='+str(STATUS_CALLBACK)
