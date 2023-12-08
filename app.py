@@ -5,7 +5,7 @@ from chatgpt import func_gpt_status_do_run_do_assistente
 from chatgpt import func_gpt_busca_mensagens
 from controllers.twiliox import func_responde_ao_cliente_pelo_whatsapp
 from controllers.twiliox import dynamo_thread_todos
-from controllers.twiliox import dynamo_clientes_todos,dynamo_parametro_todos,dynamo_clientes_updatebyId
+from controllers.twiliox import dynamo_clientes_todos,dynamo_parametro_todos,dynamo_clientes_updatebyId,dynamo_execucao_todos
 import logging
 from controllers.twiliox import func_twilio_chegou
 
@@ -132,7 +132,7 @@ def teste_envia_zap():
 #### front /bff/v1/chats
 @app.route(api_bff+'chats', methods=['GET'])
 def bff_chats():
-  logging.info(' #bff front /bff/v1/chats')
+  #logging.info(' #bff front /bff/v1/chats')
   retorno = dynamo_thread_todos()  
   return (retorno, 200)
 
@@ -144,7 +144,7 @@ def bff_chats():
 #### front /bff/v1/chats/1
 @app.route(api_bff+'chats/<string:telefone>', methods=['GET'])
 def bff_chats_by_telefone(telefone):
-  logging.info(' >>>>> BFF func_bff_chats telefone='+ telefone)
+  #logging.info(' >>>>> BFF func_bff_chats telefone='+ telefone)
   #retorno = func_bff_chatsByTelefone(telefone)
   return ('teste123', 200)
 
@@ -153,7 +153,7 @@ def bff_chats_by_telefone(telefone):
 #### front /bff/v1/chats-by-id/thread_4q2SaBanQRRigbyVpgaWoKmr
 @app.route(api_bff+'chats-by-id/<string:id>', methods=['GET'])
 def bff_chats_by_telefonexxx(id):
-  logging.info(' >>>>> BFF chats-by-id='+ id)
+  #logging.info(' >>>>> BFF chats-by-id='+ id)
   retorno = func_gpt_busca_mensagens(id)
   return (retorno, 200)
 
@@ -163,8 +163,16 @@ def bff_chats_by_telefonexxx(id):
 #### front /bff/v1/chats-by-id/thread_4q2SaBanQRRigbyVpgaWoKmr
 @app.route(api_bff+'clientes', methods=['GET'])
 def bff_clientes_todos():
-  logging.info(' >>>>> BFF clientes')
+  #logging.info(' >>>>> BFF clientes')
   retorno = dynamo_clientes_todos()
+  return (retorno, 200)
+####
+### BFF Execucao TODOS
+#### front /bff/v1/execucao
+@app.route(api_bff+'execucao', methods=['GET'])
+def bff_execucao_todos():
+  #logging.info(' >>>>> BFF execucao')
+  retorno = dynamo_execucao_todos()
   return (retorno, 200)
 
 ####
@@ -182,7 +190,7 @@ def bff_clientes_update(telefone):
   telefone = data['telefone']
   modo = data['modo_assistente']
   retorno = dynamo_clientes_updatebyId(telefone,modo)
-  logging.info(retorno)
+  #logging.info(retorno)
   # Como exemplo, vamos apenas retorná-los
   return jsonify({'telefone': telefone, 'modo_assistente': modo}), 201
 
@@ -192,7 +200,7 @@ def bff_clientes_update(telefone):
 #### front /bff/v1/parametro
 @app.route(api_bff+'parametro', methods=['GET'])
 def bff_parametro():
-  logging.info(' >>>>> BFF parametro')
+  #logging.info(' >>>>> BFF parametro')
   retorno = dynamo_parametro_todos()
   return (retorno, 200)
 
@@ -202,4 +210,5 @@ if __name__ == "__main__":
   print('AMBIENTE='+AMBIENTE)
   BANCO = os.getenv("BANCO")
   print('BANCO='+BANCO)
+  print('VERSAO_LOGICA='+os.getenv("VERSAO"))
   app.run(host="0.0.0.0", port=int("8080"), debug=False)

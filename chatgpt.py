@@ -79,7 +79,7 @@ def func_gpt_rodar_assistente(thread):
   logging.info("ASSISTENTE_ID: asst_Z1pMBbuDlAQLLJ0nyTMttgHl")
   
   logging.info("thread: "+ thread)
-  time.sleep(10)
+  #time.sleep(10)
   payload = {
          
                 "assistant_id": 'asst_Z1pMBbuDlAQLLJ0nyTMttgHl'

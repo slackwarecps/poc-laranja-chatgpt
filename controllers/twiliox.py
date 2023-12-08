@@ -13,6 +13,7 @@ from chatgpt import func_gpt_criar_mensagem
 from chatgpt import func_gpt_rodar_assistente
 from chatgpt import func_gpt_status_do_run_do_assistente
 from chatgpt import func_gpt_busca_mensagens
+
 import os
 from dotenv import load_dotenv, find_dotenv
 import requests
@@ -20,6 +21,7 @@ import json
 
 
 load_dotenv('config/.env')
+VERSAO=os.getenv("VERSAO","V1")
 
 def func_twilio_chegou(request):
   logging.info('================================ ')
@@ -61,12 +63,29 @@ def func_twilio_chegou(request):
   ## FASE 2 ================= 
 
   # #2 Ja existe uma conversa ativa para esse numero/cliente?
-  existe_thread = verifica_existe_thread_cliente(telefone)
-  print('existe thread = '+existe_thread)
-  if existe_thread!='null':
-    logging.info('  Sim Existe thread  :)')    
-  else:
-    logging.info('  Não existe thread  :(  )')      
+  if VERSAO=='V1':
+    existe_thread = verifica_existe_thread_cliente(telefone)
+    print('existe thread = '+existe_thread)
+    if existe_thread!='null':
+      logging.info('  Sim Existe thread  :)')    
+    else:
+      logging.info('  Não existe thread  :(  )')      
+      # 50 criar a thead do gpt
+      thread_criada = func_gpt_criar_thread()
+      print(thread_criada)
+      existe_thread=thread_criada['id']
+      # 4 Criar a thread no banco
+      thread_db = dynamo_thread_salvar(telefone,thread_criada)
+      logging.info(' #4 thread salva no banco de de dados :' + thread_criada['id'])
+
+
+  if VERSAO=='V2':
+    #existe_thread = verifica_existe_thread_cliente(telefone)
+    #print('existe thread = '+existe_thread)
+    #if existe_thread!='null':
+    #  logging.info('  Sim Existe thread  :)')    
+    #else:
+    logging.info(' NAO VERIFICO THREAD LOGICA V2 CRIO SEMPRE UMA NOVA')      
     # 50 criar a thead do gpt
     thread_criada = func_gpt_criar_thread()
     print(thread_criada)
@@ -74,6 +93,7 @@ def func_twilio_chegou(request):
     # 4 Criar a thread no banco
     thread_db = dynamo_thread_salvar(telefone,thread_criada)
     logging.info(' #4 thread salva no banco de de dados :' + thread_criada['id'])
+
     
   # #5 Insere a Mensagem na thread
 
@@ -104,15 +124,18 @@ def aguarda_execucao_do_assistente(thread,run_id,telefone_do_cliente):
   
   contador_aguarde=0
   timeout_flag=False
-  while contador_aguarde <= 120:
+  while contador_aguarde <= 300:
     logging.info('espera um pouco...'+ str(contador_aguarde))
-    time.sleep(1)
+    
     retorno = func_gpt_status_do_run_do_assistente(thread,run_id)
+    #print('created_at='+str(retorno['created_at']))
+    time.sleep(1)
+    execucao_registro = retorno
     logging.info(' STATUS_THREAD='+retorno['status'])
-    if (contador_aguarde ==60 ) or (retorno['status']=='completed'):
+    if (contador_aguarde ==180 ) or (retorno['status']=='completed'):
       ultimo_status=retorno['status']      
       if ultimo_status!='completed':
-        logging.warning(' Saiu por time-out 60 segundos')
+        logging.warning(' Saiu por time-out 120 segundos')
         timeout_flag=True
       
       break  
@@ -120,6 +143,15 @@ def aguarda_execucao_do_assistente(thread,run_id,telefone_do_cliente):
   # 15 Se deu certo aguardar entao pega as mensagens do assistente e envia de volta.  
   if (timeout_flag==False):
     logging.info(' #15 deu certo... busca e filtra')
+    logging.info(' ===================> VERSAO_LOGICA '+VERSAO)
+    if VERSAO=='V2':
+      logging.info(' LOGICA V2 ATIVA')
+      dynamo_execucao_salvar(telefone_do_cliente,execucao_registro['id'],execucao_registro['thread_id'],str(execucao_registro['created_at']))
+      # print('execucao id =')
+      #logging.info( execucao_registro['id'])
+      #time.sleep(10)
+
+
     logging.info(' #15 Vou aguarda 5 segundos para o chat-gpt conseguir responder todas as respostas.')
     time.sleep(5)
     # 15 busca as mensagens
@@ -131,7 +163,7 @@ def aguarda_execucao_do_assistente(thread,run_id,telefone_do_cliente):
     
     
     # 12 ENVIAR PARA O CLIENTE
-    logging.info('<<TO-DO ENVIAR PARA O WHATS AQUI>>>')
+    logging.info('ENVIA PARA O WHATS AQUI >>>')
     payload_json =lista_de_mensagens_full
     #print(payload_json)
   
@@ -147,10 +179,10 @@ def aguarda_execucao_do_assistente(thread,run_id,telefone_do_cliente):
           time.sleep(2)
           func_responde_ao_cliente_pelo_whatsapp(remetente, mensagem,destino)
   
-  logging.info(' www Apagando a thread desse cliente por enquanto')
-  if telefone_do_cliente not in ['5511983477360']:
-    thread_apagar(telefone_do_cliente)
-  time.sleep(10)
+  #logging.info(' www Apagando a thread desse cliente por enquanto')
+  #if telefone_do_cliente not in ['5511983477360']:
+    #thread_apagar(telefone_do_cliente)
+  #time.sleep(10)
   logging.info(' :) FIM DO PROCESSO!!!')
   # limpar a thread
   
@@ -485,4 +517,42 @@ def dynamo_parametro_todos(dynamodb=None):
       response = table.scan(ExclusiveStartKey=response['LastEvaluatedKey'])
       for item in response['Items']:
           print(item['telefone'])
+  return response
+
+def dynamo_execucao_todos(dynamodb=None):
+  logging.info(' #2 Buscando dynamo_execucao_todos')
+  if os.getenv("BANCO")=='LOCAL':
+    dynamodb = boto3.resource('dynamodb', endpoint_url="http://localhost:8000")
+  else:
+    dynamodb = boto3.resource('dynamodb')
+  table = dynamodb.Table('execucao')
+
+  response = table.scan()
+  
+  while 'LastEvaluatedKey' in response:
+      response = table.scan(ExclusiveStartKey=response['LastEvaluatedKey'])
+      for item in response['Items']:
+          print(item['telefone'])
+  return response
+
+def dynamo_execucao_salvar(telefone,run_id,thread_id,created_at, dynamodb=None):
+  logging.info(' #4 50. Insere execucao na Base:' +telefone)
+  logging.info(' #4 50. Insere execucao na Base:' +run_id)
+  logging.info(' #4 50. Insere execucao na Base:' +thread_id)
+  logging.info(' #4 50. Insere execucao na Base:' +created_at)
+  if os.getenv("BANCO")=='LOCAL':
+    dynamodb = boto3.resource('dynamodb', endpoint_url="http://localhost:8000")
+  else:
+    dynamodb = boto3.resource('dynamodb')    
+
+  table = dynamodb.Table('execucao')
+  response = table.put_item( 
+    Item={
+        'telefone': telefone,
+        'thread_id': thread_id,
+        'run_id':run_id,
+        'created_at':created_at        
+    }
+  )
+  logging.info('>>>>>> Gravou a EXECUCAO NO BANCO')
   return response
