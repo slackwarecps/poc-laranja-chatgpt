@@ -159,9 +159,18 @@ $ docker build -t fabioalvaro/poc-laranja:latest .
 Crie um arquivo .env com as seguinte variaveis de ambiente
 
 ````
-AMBIENTE=DEV
-GPT_API_KEY=COLE_AQUI
-ASSISTENTE_ID=COLE_AQUI
+## Arquivo de configuracao /config/.env
+AMBIENTE=PRODUCAO
+GPT_API_KEY=sk-LEasdasdasdasd
+ASSISTENTE_ID=asst_Z1pasdasdasd
+BANCO=REMOTO
+TWILIO_ACCOUNT=ACf1f1asdasdasd
+TWILIO_AUTH_TOKEN=ecf987asdasdasd
+TWILIO_BASIC_RESPOSTA=QUNmMWYasdasdasdasdasda
+STATUS_CALLBACK=http://asdasdasd.compute-1.amazonaws.com:8080/poc-laranja/v1/service/health
+REMETENTE_TWILIO_WHATS=186asdasdasdas
+TWILIO_ACCOUNT_SID=ACf1f1f7asdasdasdasdas
+VERSAO=V2
 
 ````
 
