@@ -77,16 +77,18 @@ def func_twilio_chegou(request):
     
   # #5 Insere a Mensagem na thread
 
-  #thread='thread_0ZCYJVCOLE_AQUI'
-  thread=existe_thread
-  retorno_msg=insere_mensagem_na_thread(telefone,thread,mensagem)
-  
-  # 9 Roda o Assistente
-  run_id = roda_assistente(thread)
-  print('run_id='+run_id)
-  print('thread='+thread)
-  # 14 Aguarda JUMP para Fase Assincrona
-  aguarda_execucao_do_assistente(thread,run_id,telefone)
+  if cliente_modo==True:
+    thread=existe_thread
+    retorno_msg=insere_mensagem_na_thread(telefone,thread,mensagem)
+    
+    # 9 Roda o Assistente
+    run_id = roda_assistente(thread)
+    print('run_id='+run_id)
+    print('thread='+thread)
+    # 14 Aguarda JUMP para Fase Assincrona
+    aguarda_execucao_do_assistente(thread,run_id,telefone)
+  else:
+    logging.info('  MODO_ASSISTENTE=FALSE!!! NAO VOU FAZER NADA!!!')
 
 
 
@@ -146,7 +148,9 @@ def aguarda_execucao_do_assistente(thread,run_id,telefone_do_cliente):
           func_responde_ao_cliente_pelo_whatsapp(remetente, mensagem,destino)
   
   logging.info(' www Apagando a thread desse cliente por enquanto')
-  thread_apagar(telefone_do_cliente)
+  if telefone_do_cliente not in ['5511983477360']:
+    thread_apagar(telefone_do_cliente)
+  time.sleep(10)
   logging.info(' :) FIM DO PROCESSO!!!')
   # limpar a thread
   
@@ -236,8 +240,7 @@ def dynamo_thread_busca_por_telefone(telefone, dynamodb=None):
   # Substitua pelo valor do campo 'status' que você quer filtrar
   status_filtar = 'ativo'
   
-  try:
-    
+  try:    
     # A busca usando query com FilterExpression
     resposta = table.query(
        KeyConditionExpression=Key('telefone').eq(telefone_busca) & Key('status').eq(status_filtar)
@@ -245,10 +248,8 @@ def dynamo_thread_busca_por_telefone(telefone, dynamodb=None):
     # Extrai e imprime os itens
     #items = resposta['Items']
     #for item in items:
-    #  print(item['id'])
-    
-    #print(resposta)
-    
+    #  print(item['id'])    
+    #print(resposta)   
     
   except ClientError as e:
     print(e.response['Error']['Message'])
@@ -314,7 +315,7 @@ def dynamo_mensagem_salvar(telefone,thread,mensagem, dynamodb=None):
   if os.getenv("BANCO")=='LOCAL':
     dynamodb = boto3.resource('dynamodb', endpoint_url="http://localhost:8000")
   else:
-    dynamodb = boto3.resource('dynamodb')    
+    dynamodb = boto3.resource('dynamodb') 
   
   new_messages = [
     thread
@@ -338,6 +339,10 @@ def dynamo_mensagem_salvar(telefone,thread,mensagem, dynamodb=None):
   logging.info('    #5 51. Mensagem inserida na base')
 
   return response  
+
+
+
+
 
 # Filtra as mensagens do assistente
 def filtra_as_mensagens_do_assistente(lista_de_mensagens=[]):
@@ -375,6 +380,17 @@ def func_responde_ao_cliente_pelo_whatsapp(remetente, mensagem,destino):
   logging.info(     ' ')
   
   
+
+
+
+
+
+
+
+
+
+
+
 #Apaga a thread  
 def thread_apagar(telefone, dynamodb=None):
   logging.info(' #7. Insere Cliente na Base:' +telefone)
@@ -392,3 +408,81 @@ def thread_apagar(telefone, dynamodb=None):
   )
   logging.info('thread apagada:', response_deletar)
   return response_deletar
+
+def dynamo_thread_todos(dynamodb=None):
+  logging.info(' #2 Buscando thread Todos')
+  if os.getenv("BANCO")=='LOCAL':
+    dynamodb = boto3.resource('dynamodb', endpoint_url="http://localhost:8000")
+  else:
+    dynamodb = boto3.resource('dynamodb')
+  table = dynamodb.Table('thread')
+
+  response = table.scan()
+  
+  while 'LastEvaluatedKey' in response:
+      response = table.scan(ExclusiveStartKey=response['LastEvaluatedKey'])
+      for item in response['Items']:
+          print(item['telefone'])
+  return response
+
+
+def dynamo_clientes_todos(dynamodb=None):
+  logging.info(' #2 Buscando thread Todos')
+  if os.getenv("BANCO")=='LOCAL':
+    dynamodb = boto3.resource('dynamodb', endpoint_url="http://localhost:8000")
+  else:
+    dynamodb = boto3.resource('dynamodb')
+  table = dynamodb.Table('cliente')
+
+  response = table.scan()
+  
+  while 'LastEvaluatedKey' in response:
+      response = table.scan(ExclusiveStartKey=response['LastEvaluatedKey'])
+      for item in response['Items']:
+          print(item['telefone'])
+  return response
+
+
+
+def dynamo_clientes_updatebyId(telefone,modo,dynamodb=None):
+  logging.info(' #2 Atualizando o modo do assisten do cliente telefone='+telefone+' modo='+str(modo))
+  if os.getenv("BANCO")=='LOCAL':
+    dynamodb = boto3.resource('dynamodb', endpoint_url="http://localhost:8000")
+  else:
+    dynamodb = boto3.resource('dynamodb')
+  table = dynamodb.Table('cliente')
+
+  response = table.scan()
+  
+  # Atualiza o item na tabela
+  response = table.update_item(
+      Key={'telefone': telefone},
+      UpdateExpression='SET modo_assistente = :val',
+      ExpressionAttributeValues={':val': modo},
+      ReturnValues="UPDATED_NEW"
+  )
+  logging.info(response)
+  return response
+
+
+
+
+
+
+
+
+def dynamo_parametro_todos(dynamodb=None):
+  logging.info(' #2 dynamo_parametro_todos')
+  if os.getenv("BANCO")=='LOCAL':
+    dynamodb = boto3.resource('dynamodb', endpoint_url="http://localhost:8000")
+  else:
+    dynamodb = boto3.resource('dynamodb')
+  table = dynamodb.Table('parametro')
+
+  response = table.scan()
+  
+  while 'LastEvaluatedKey' in response:
+      response = table.scan(ExclusiveStartKey=response['LastEvaluatedKey'])
+      for item in response['Items']:
+          print(item['telefone'])
+  return response

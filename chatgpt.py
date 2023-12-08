@@ -5,6 +5,7 @@ import logging
 import json
 import os
 from dotenv import load_dotenv, find_dotenv
+import time
 
 debug=False
 load_dotenv(find_dotenv())
@@ -14,7 +15,7 @@ api_key = os.getenv("GPT_API_KEY")
 
 # Endpoint da GPT-4 API
 url_api = 'https://api.openai.com/v1'
-assistant_id = os.getenv("ASSISTENTE_ID")
+assistant_id = 'asst_Z1pMBbuDlAQLLJ0nyTMttgHl'
 
 # Cria um identificador único para a sessão da conversa
 session_id = str(uuid.uuid4())
@@ -75,11 +76,13 @@ def func_gpt_rodar_assistente(thread):
   logging.info("name: "+ __name__)
 
   logging.info(' #9 Entrou na func_gpt_criar_mensagem ') 
-  logging.info("assistant_id: "+ assistant_id)
+  logging.info("ASSISTENTE_ID: asst_Z1pMBbuDlAQLLJ0nyTMttgHl")
+  
   logging.info("thread: "+ thread)
+  time.sleep(10)
   payload = {
          
-                "assistant_id": assistant_id
+                "assistant_id": 'asst_Z1pMBbuDlAQLLJ0nyTMttgHl'
     }
   # Fazendo a requisição POST
   url = url_api + '/threads/'+thread+'/runs'
@@ -119,7 +122,7 @@ def func_gpt_status_do_run_do_assistente(thread_id,run_id):
 
 
 # Busca Mensagens da Thread 
-def func_gpt_busca_mensagens(thread_id):
+def func_gpt_busca_mensagens(thread_id=''):
   logging.info(' #15 Entrou na func_gpt_busca_mensagens ') 
   logging.info("thread: "+ thread_id)
   # Fazendo a requisição POST

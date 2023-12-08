@@ -1,15 +1,18 @@
-from flask import Flask, request
+from flask import Flask, request, redirect, url_for,jsonify
 
 import chatgpt
 from chatgpt import func_gpt_status_do_run_do_assistente
 from chatgpt import func_gpt_busca_mensagens
 from controllers.twiliox import func_responde_ao_cliente_pelo_whatsapp
+from controllers.twiliox import dynamo_thread_todos
+from controllers.twiliox import dynamo_clientes_todos,dynamo_parametro_todos,dynamo_clientes_updatebyId
 import logging
 from controllers.twiliox import func_twilio_chegou
+
 import os
 from dotenv import load_dotenv, find_dotenv
 import time
-
+from flask_cors import CORS
 
 
 load_dotenv('config/.env')
@@ -22,9 +25,11 @@ logging.debug(' ')
 logging.debug('****************************************')
 
 api='/poc-laranja/v1/'
+api_bff='/bff/v1/'
 
 # Flask app
 app = Flask(__name__)
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 @app.route('/', methods=['GET'])
 def home():
@@ -39,6 +44,7 @@ def teste():
   logging.info('TESTE')
   print('T_THREAD=' + os.getenv("T_THREAD"))
   print('AMBIENTE=' + os.getenv("AMBIENTE"))
+  print('ASSISTENTE_ID=' + os.getenv("ASSISTENTE_ID"))
   func_gpt_busca_mensagens(os.getenv("T_THREAD"))
   return 'POC Laranja v1.0', 200
 
@@ -120,6 +126,75 @@ def teste_envia_zap():
   func_responde_ao_cliente_pelo_whatsapp(remetente, mensagem,destino)
   return ('', 201)
 
+
+####
+### BFF Angular
+#### front /bff/v1/chats
+@app.route(api_bff+'chats', methods=['GET'])
+def bff_chats():
+  logging.info(' #bff front /bff/v1/chats')
+  retorno = dynamo_thread_todos()  
+  return (retorno, 200)
+
+
+
+
+####
+### BFF Angular
+#### front /bff/v1/chats/1
+@app.route(api_bff+'chats/<string:telefone>', methods=['GET'])
+def bff_chats_by_telefone(telefone):
+  logging.info(' >>>>> BFF func_bff_chats telefone='+ telefone)
+  #retorno = func_bff_chatsByTelefone(telefone)
+  return ('teste123', 200)
+
+####
+### BFF CHAT por id
+#### front /bff/v1/chats-by-id/thread_4q2SaBanQRRigbyVpgaWoKmr
+@app.route(api_bff+'chats-by-id/<string:id>', methods=['GET'])
+def bff_chats_by_telefonexxx(id):
+  logging.info(' >>>>> BFF chats-by-id='+ id)
+  retorno = func_gpt_busca_mensagens(id)
+  return (retorno, 200)
+
+
+####
+### BFF Clientes TODOS
+#### front /bff/v1/chats-by-id/thread_4q2SaBanQRRigbyVpgaWoKmr
+@app.route(api_bff+'clientes', methods=['GET'])
+def bff_clientes_todos():
+  logging.info(' >>>>> BFF clientes')
+  retorno = dynamo_clientes_todos()
+  return (retorno, 200)
+
+####
+### BFF Cliente por Telefone UPDATE
+#### front /bff/v1/clientes/11983477360
+@app.route(api_bff+'clientes/<string:telefone>', methods=['PUT'])
+def bff_clientes_update(telefone):
+  logging.info(' >>>>> BFF bff_clientes_update'+telefone)
+  # Obtém o body da requisição em formato JSON
+  data = request.get_json()
+  # Verifica se 'nome' e 'valor' estão presentes no body
+  if 'telefone' not in data or 'modo_assistente' not in data:
+      return jsonify({'message': 'telefone e modo_assistente são obrigatórios.'}), 400
+   # Extrai 'nome' e 'valor' do body da requisição
+  telefone = data['telefone']
+  modo = data['modo_assistente']
+  retorno = dynamo_clientes_updatebyId(telefone,modo)
+  logging.info(retorno)
+  # Como exemplo, vamos apenas retorná-los
+  return jsonify({'telefone': telefone, 'modo_assistente': modo}), 201
+
+
+####
+### BFF Angular
+#### front /bff/v1/parametro
+@app.route(api_bff+'parametro', methods=['GET'])
+def bff_parametro():
+  logging.info(' >>>>> BFF parametro')
+  retorno = dynamo_parametro_todos()
+  return (retorno, 200)
 
 
 if __name__ == "__main__":
