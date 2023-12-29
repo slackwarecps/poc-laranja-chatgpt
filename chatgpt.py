@@ -7,6 +7,8 @@ import os
 from dotenv import load_dotenv, find_dotenv
 import time
 
+  
+
 debug=False
 load_dotenv(find_dotenv())
 
@@ -72,18 +74,32 @@ def func_gpt_criar_mensagem(thread,mensagem):
     logging.error(f"Status Code: {response.status_code}, Response: {response.text}")
     return 'null'
 
-def func_gpt_rodar_assistente(thread):
+def func_gpt_rodar_assistente(thread,telefone='',assistant_id='',beta=[]):
   logging.info("name: "+ __name__)
 
   logging.info(' #9 Entrou na func_gpt_criar_mensagem ') 
-  logging.info("ASSISTENTE_ID: asst_Z1pMBbuDlAQLLJ0nyTMttgHl")
   
   logging.info("thread: "+ thread)
   #time.sleep(10)
-  payload = {
-         
-                "assistant_id": 'asst_Z1pMBbuDlAQLLJ0nyTMttgHl'
-    }
+  #Fabio usa o bugiganga
+  print('telefone='+telefone)
+  print('assistant_id='+assistant_id)
+  print('beta=')
+  print(beta)
+  
+  
+  if telefone in beta:
+    
+    #retorno = func_parametros_busca_todos()
+    #print(retorno)
+    
+    print('assistant_id='+assistant_id)
+    payload = {"assistant_id": 'asst_MussSoD9N4YjSVN8pk9a1bOu'}
+    logging.info("ASSISTENTE_ID: Bugiganga!!!xxxx")
+  else:
+    payload = {"assistant_id": 'asst_Z1pMBbuDlAQLLJ0nyTMttgHl'}
+    logging.info("ASSISTENTE_ID: asst_Z1pMBbuDlAQLLJ0nyTMttgHl")
+  
   # Fazendo a requisição POST
   url = url_api + '/threads/'+thread+'/runs'
   response = requests.post(url, headers=headers,data=json.dumps(payload))

@@ -8,12 +8,14 @@ from controllers.twiliox import dynamo_thread_todos
 from controllers.twiliox import dynamo_clientes_todos,dynamo_parametro_todos,dynamo_clientes_updatebyId,dynamo_execucao_todos
 import logging
 from controllers.twiliox import func_twilio_chegou
+from services.parametro.service_parametro import func_parametros_busca_todos
 
 import os
 from dotenv import load_dotenv, find_dotenv
 import time
 from flask_cors import CORS
-
+import socketio
+import globais
 
 load_dotenv('config/.env')
 
@@ -210,5 +212,28 @@ if __name__ == "__main__":
   print('AMBIENTE='+AMBIENTE)
   BANCO = os.getenv("BANCO")
   print('BANCO='+BANCO)
+  
+  # retorno = func_parametros_busca_todos()
+  # print(retorno)
+  # # Aqui está nossa caixa de ferramentas, quero dizer, nossa lista de strings
+  # lista_de_valores = retorno['Items'][0]['numeros_beta_fabio']
+
+  # # E aqui está o parafuso que estamos procurando... ops, a string que queremos verificar
+  # string_procurada = "5511983477360"
+  # #print(retorno['Items']['numeros_beta_fabio'])
+  # #if '5511983477360' in retorno['Items']['numeros_beta_fabio']:
+  # if string_procurada in lista_de_valores:
+  #   print(f"Achei! O '{string_procurada}' está bem aqui na lista!")
+  # else:
+  #   print(f"Não achei! O '{string_procurada}' deve ter saído para dar uma volta.")
+  # Cria um cliente SocketIO
+
+  uri='http://ec2-44-203-190-75.compute-1.amazonaws.com'
+  globais.sio.connect('http://localhost:8081')
+
+  
+  
   print('VERSAO_LOGICA='+os.getenv("VERSAO"))
+  print('ASSISTENTE_ID_VAR='+os.getenv("ASSISTENTE_ID_VAR"))
   app.run(host="0.0.0.0", port=int("8080"), debug=False)
+

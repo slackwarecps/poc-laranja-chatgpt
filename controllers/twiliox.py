@@ -13,17 +13,32 @@ from chatgpt import func_gpt_criar_mensagem
 from chatgpt import func_gpt_rodar_assistente
 from chatgpt import func_gpt_status_do_run_do_assistente
 from chatgpt import func_gpt_busca_mensagens
+from services.parametro.service_parametro import func_parametros_busca_todos
+#from services.socketio_cliente.py import func_socket_comando
 
 import os
 from dotenv import load_dotenv, find_dotenv
 import requests
 import json
+import socketio
+import globais
 
 
 load_dotenv('config/.env')
 VERSAO=os.getenv("VERSAO","V1")
 
 def func_twilio_chegou(request):
+  # Envia uma mensagem para o servidor
+  #global sio
+  #sio.emit('mensagem_criada', {'data':'twilio chegou'},broadcast=True)
+  
+  #globais.sio.emit('comando_criar_mensagem', {'data': 'chegou!!!'})
+  
+  #busca parametros
+  beta1 = func_parametros_busca_todos()
+  if 'Items' in beta1:
+    beta=beta1['Items'][0]['numeros_beta_fabio']
+  
   logging.info('================================ ')
   logging.info("name: "+ __name__)
   logging.info('Entrou na func_twilio_chegou')
@@ -59,6 +74,7 @@ def func_twilio_chegou(request):
     logging.info("Cliente cadastrado com sucesso")
     #pprint(resposta, sort_dicts=False)
     telefone=wa_id
+    cliente_modo = True
   
   ## FASE 2 ================= 
 
@@ -102,7 +118,16 @@ def func_twilio_chegou(request):
     retorno_msg=insere_mensagem_na_thread(telefone,thread,mensagem)
     
     # 9 Roda o Assistente
-    run_id = roda_assistente(thread)
+    dados_cliente=dynamo_cliente_busca_por_telefone(telefone)
+    print(dados_cliente)
+    beta_assistente_personalizado=''
+    if 'assistant_id' in dados_cliente:
+      beta_assistente_personalizado = dados_cliente['assistant_id']
+      print(beta_assistente_personalizado)
+    else:
+      print('nao tem o assistant_id na tabela')
+      
+    run_id = roda_assistente(thread,telefone,beta_assistente_personalizado,beta)
     print('run_id='+run_id)
     print('thread='+thread)
     # 14 Aguarda JUMP para Fase Assincrona
@@ -176,8 +201,13 @@ def aguarda_execucao_do_assistente(thread,run_id,telefone_do_cliente):
           destino='whatsapp:'+telefone_do_cliente
           remetente='whatsapp:18647407407' # tem que ser o numero da Jennifer Assistente 
           mensagem=linha
+          
+          nome_cliente = dynamo_cliente_busca_por_telefone(telefone_do_cliente)
+          #print(nome_cliente['nome'])
           time.sleep(2)
           func_responde_ao_cliente_pelo_whatsapp(remetente, mensagem,destino)
+          data={'telefone':telefone_do_cliente,'nome':nome_cliente['nome'], 'conteudo':mensagem,'role':'assistant'}
+          globais.sio.emit('comando_criar_mensagem',data)
   
   #logging.info(' www Apagando a thread desse cliente por enquanto')
   #if telefone_do_cliente not in ['5511983477360']:
@@ -233,6 +263,10 @@ def insere_mensagem_na_thread(telefone,thread,mensagem):
   #print('mensagem')         
   #print(mensagem_retorno)
   dynamo_mensagem_salvar(telefone,mensagem_retorno,mensagem)
+  nome_cliente = dynamo_cliente_busca_por_telefone(telefone)
+  data={'telefone':telefone,'nome':nome_cliente['nome'], 'conteudo':mensagem,
+        'role':'user'}
+  globais.sio.emit('comando_criar_mensagem',data)
 
 
 
@@ -311,11 +345,13 @@ def dynamo_cliente_salvar(telefone,ProfileName, dynamodb=None):
   data_atual_br = datetime.now(timezone)
   epoch = data_atual_br.timestamp()  
   table = dynamodb.Table('cliente')
+  ASSISTENTE_ID_VAR =  os.getenv("ASSISTENTE_ID_VAR")
   response = table.put_item( 
     Item={
         'telefone': telefone,
         'nome': ProfileName,
         'modo_assistente': True,
+        'assistant_id':ASSISTENTE_ID_VAR,
         'created': str(epoch)
     }
   )
@@ -387,9 +423,11 @@ def filtra_as_mensagens_do_assistente(lista_de_mensagens=[]):
 
 
 
-def roda_assistente(thread): 
+def roda_assistente(thread,telefone='',beta_assistente_personalizado='',beta=[]): 
   logging.info(' #9 rodando o Assistente...')
-  run_id=func_gpt_rodar_assistente(thread)
+  print('#9 beta')
+  print(beta)
+  run_id=func_gpt_rodar_assistente(thread,telefone,beta_assistente_personalizado,beta)
   return run_id['id']
 
 
@@ -473,7 +511,6 @@ def dynamo_clientes_todos(dynamodb=None):
       for item in response['Items']:
           print(item['telefone'])
   return response
-
 
 
 def dynamo_clientes_updatebyId(telefone,modo,dynamodb=None):
